@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fhmq/hmq/logger"
+	"github.com/lei006/gmqtt-broker/logger"
 	"go.uber.org/zap"
 )
 
-//Config device kafka config
+// Config device kafka config
 type Config struct {
 	AuthURL  string `json:"auth"`
 	ACLURL   string `json:"acl"`
@@ -31,7 +31,7 @@ var (
 	httpClient *http.Client
 )
 
-//Init init kafak client
+// Init init kafak client
 func Init() *authHTTP {
 	content, err := ioutil.ReadFile("./plugins/auth/authhttp/http.json")
 	if err != nil {
@@ -137,7 +137,7 @@ func (a *authHTTP) CheckConnect(clientID, username, password string) bool {
 // 	return false
 // }
 
-//CheckACL check mqtt connect
+// CheckACL check mqtt connect
 func (a *authHTTP) CheckACL(action, clientID, username, ip, topic string) bool {
 
 	{

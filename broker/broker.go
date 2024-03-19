@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fhmq/hmq/broker/lib/sessions"
-	"github.com/fhmq/hmq/broker/lib/topics"
-	"github.com/fhmq/hmq/plugins/auth"
-	"github.com/fhmq/hmq/plugins/bridge"
-	"github.com/fhmq/hmq/pool"
+	"github.com/lei006/gmqtt-broker/broker/lib/sessions"
+	"github.com/lei006/gmqtt-broker/broker/lib/topics"
+	"github.com/lei006/gmqtt-broker/plugins/auth"
+	"github.com/lei006/gmqtt-broker/plugins/bridge"
+	"github.com/lei006/gmqtt-broker/pool"
 
 	"github.com/eclipse/paho.mqtt.golang/packets"
 	"go.uber.org/zap"
@@ -47,6 +47,8 @@ type Broker struct {
 	sessionMgr  *sessions.Manager
 	auth        auth.Auth
 	bridgeMQ    bridge.BridgeMQ
+	listener    net.Listener
+	askClose    bool
 }
 
 func newMessagePool() []chan *Message {
@@ -211,6 +213,68 @@ func (b *Broker) wsHandler(ws *websocket.Conn) {
 	}
 }
 
+func (b *Broker) StopServer() error {
+	b.askClose = true
+	return b.listener.Close()
+}
+
+func (b *Broker) StartServer(addr string) error {
+	var err error
+
+	b.askClose = false
+
+	if addr == "" {
+		return errors.New("please config addr")
+	}
+
+	b.listener, err = net.Listen("tcp", addr)
+	log.Info("Start Listening client on " + addr)
+
+	if err != nil {
+		log.Error("Error listening on ", zap.Error(err))
+		return errors.New("Error listening on " + err.Error())
+	}
+
+	tmpDelay := 5 * ACCEPT_MIN_SLEEP
+	for {
+
+		if b.askClose == true {
+			break
+		}
+
+		conn, err := b.listener.Accept()
+		if err != nil {
+			if ne, ok := err.(net.Error); ok && ne.Temporary() {
+				log.Error(
+					"Temporary Client Accept Error(%v), sleeping %dms",
+					zap.Error(ne),
+					zap.Duration("sleeping", tmpDelay/time.Millisecond),
+				)
+
+				time.Sleep(tmpDelay)
+				tmpDelay *= 2
+				if tmpDelay > ACCEPT_MAX_SLEEP {
+					tmpDelay = ACCEPT_MAX_SLEEP
+				}
+			} else {
+				log.Error("Accept error", zap.Error(err))
+			}
+			continue
+		}
+
+		tmpDelay = ACCEPT_MIN_SLEEP
+		go func() {
+			err := b.handleConnection(CLIENT, conn)
+			if err != nil {
+				conn.Close()
+			}
+
+		}()
+	}
+
+	return nil
+}
+
 func (b *Broker) StartClientListening(Tls bool) {
 	var err error
 	var l net.Listener
@@ -263,6 +327,10 @@ func (b *Broker) StartClientListening(Tls bool) {
 			err := b.handleConnection(CLIENT, conn)
 			if err != nil {
 				conn.Close()
+			}
+			if b.askClose {
+				conn.Close()
+				return
 			}
 		}()
 	}

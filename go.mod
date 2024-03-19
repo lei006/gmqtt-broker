@@ -1,4 +1,4 @@
-module github.com/fhmq/hmq
+module github.com/lei006/gmqtt-broker
 
 go 1.21
 

@@ -1,8 +1,8 @@
 package auth
 
 import (
-	authfile "github.com/fhmq/hmq/plugins/auth/authfile"
-	"github.com/fhmq/hmq/plugins/auth/authhttp"
+	authfile "github.com/lei006/gmqtt-broker/plugins/auth/authfile"
+	"github.com/lei006/gmqtt-broker/plugins/auth/authhttp"
 )
 
 const (

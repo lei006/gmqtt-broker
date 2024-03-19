@@ -9,10 +9,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/fhmq/hmq/logger"
-	"github.com/fhmq/hmq/plugins/auth"
-	"github.com/fhmq/hmq/plugins/bridge"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/lei006/gmqtt-broker/logger"
+	"github.com/lei006/gmqtt-broker/plugins/auth"
+	"github.com/lei006/gmqtt-broker/plugins/bridge"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +21,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 type Config struct {
 	Worker   int       `json:"workerNum"`
 	HTTPPort string    `json:"httpPort"`
+	Addr     string    `json:"addr"`
 	Host     string    `json:"host"`
 	Port     string    `json:"port"`
 	Cluster  RouteInfo `json:"cluster"`
@@ -59,6 +60,7 @@ type TLSInfo struct {
 
 var DefaultConfig *Config = &Config{
 	Worker: 4096,
+	Addr:   "0.0.0.0:1883",
 	Host:   "0.0.0.0",
 	Port:   "1883",
 }

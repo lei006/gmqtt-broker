@@ -4,8 +4,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/fhmq/hmq/broker"
-	"github.com/fhmq/hmq/logger"
+	"github.com/lei006/gmqtt-broker/broker"
+	"github.com/lei006/gmqtt-broker/logger"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +21,7 @@ func main() {
 	if err != nil {
 		log.Fatal("New Broker error: ", zap.Error(err))
 	}
-	b.Start()
+	b.StartServer(":1883")
 
 	s := waitForSignal()
 	log.Info("signal received, broker closed.", zap.Any("signal", s))
